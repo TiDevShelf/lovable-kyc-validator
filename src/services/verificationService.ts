@@ -94,7 +94,7 @@ export const verifyAadhaarWithOtp = async (
   }
 };
 
-// Mock implementation for PAN verification
+// Mock implementation for PAN verification (used for both owner and business PAN)
 export const verifyPan = async (panNumber: string): Promise<PanVerifyResponse> => {
   console.log(`Verifying PAN: ${panNumber}`);
   

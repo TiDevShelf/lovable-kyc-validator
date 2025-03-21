@@ -1,15 +1,15 @@
 import { useState, useEffect } from "react";
-import { toast } from "@/components/ui/use-toast"; // Fixed import for toast
+import { toast } from "@/components/ui/use-toast"; 
 import { Button } from "@/components/ui/button";
 import { Container } from "@/components/ui/container";
-import { verifyAadhaarOtp, verifyBankAccount, verifyBusinessPan, verifyCin, verifyDin, verifyGstin, verifyOwnerPan, generateAadhaarOtp } from "@/services/verificationService";
-import { VerificationState, VerificationStatus } from "@/types/verification";
+import { verifyAadhaarWithOtp, verifyBankAccount, verifyCin, verifyDin, verifyGstin, verifyPan, generateAadhaarOtp } from "@/services/verificationService";
+import { VerificationState } from "@/types/verification";
 import AadhaarVerificationSection from "@/components/AadhaarVerificationSection";
 import PanVerificationSection from "@/components/PanVerificationSection";
 import CompanyVerificationSection from "@/components/CompanyVerificationSection";
 import GstinVerificationSection from "@/components/GstinVerificationSection";
 import BankVerificationSection from "@/components/BankVerificationSection";
-import VerificationStatus from "@/components/VerificationStatus";
+import VerificationStatusComponent from "@/components/VerificationStatus";
 import { Shield } from "lucide-react";
 
 const KYCVerification = () => {
@@ -17,7 +17,7 @@ const KYCVerification = () => {
     aadhaar: {
       aadhaar: { value: "", status: "idle", message: "" },
       isOtpRequested: false,
-      otpDetails: { otp: "", status: "idle", message: "" },
+      otpDetails: { value: "", otp: "", status: "idle", message: "" },
     },
     pan: {
       ownerPan: { value: "", status: "idle", message: "" },
@@ -46,7 +46,6 @@ const KYCVerification = () => {
   const [isVerifyingGstin, setIsVerifyingGstin] = useState(false);
   const [isVerifyingBank, setIsVerifyingBank] = useState(false);
 
-  // Aadhaar Handlers
   const handleAadhaarChange = (value: string) => {
     setVerificationState(prevState => ({
       ...prevState,
@@ -54,7 +53,7 @@ const KYCVerification = () => {
         ...prevState.aadhaar,
         aadhaar: { value: value, status: "idle", message: "" },
         isOtpRequested: false,
-        otpDetails: { otp: "", status: "idle", message: "" },
+        otpDetails: { value: "", otp: "", status: "idle", message: "" },
       },
     }));
   };
@@ -64,7 +63,7 @@ const KYCVerification = () => {
       ...prevState,
       aadhaar: {
         ...prevState.aadhaar,
-        otpDetails: { otp: value, status: "idle", message: "" },
+        otpDetails: { ...prevState.aadhaar.otpDetails, otp: value, status: "idle", message: "" },
       },
     }));
   };
@@ -82,6 +81,11 @@ const KYCVerification = () => {
             ...prevState.aadhaar,
             isOtpRequested: true,
             aadhaar: { ...prevState.aadhaar.aadhaar, status: "success" },
+            otpDetails: { 
+              ...prevState.aadhaar.otpDetails,
+              value: result.data?.txnId || "",
+              txnId: result.data?.txnId
+            }
           },
         }));
         toast({
@@ -95,7 +99,7 @@ const KYCVerification = () => {
             ...prevState.aadhaar,
             aadhaar: { ...prevState.aadhaar.aadhaar, status: "error", message: result.message || "Failed to generate OTP." },
             isOtpRequested: false,
-            otpDetails: { otp: "", status: "idle", message: "" },
+            otpDetails: { value: "", otp: "", status: "idle", message: "" },
           },
         }));
         toast({
@@ -111,7 +115,7 @@ const KYCVerification = () => {
           ...prevState.aadhaar,
           aadhaar: { ...prevState.aadhaar.aadhaar, status: "error", message: error.message || "An unexpected error occurred." },
           isOtpRequested: false,
-          otpDetails: { otp: "", status: "idle", message: "" },
+          otpDetails: { value: "", otp: "", status: "idle", message: "" },
         },
       }));
       toast({
@@ -129,14 +133,19 @@ const KYCVerification = () => {
     try {
       const aadhaarNumber = verificationState.aadhaar.aadhaar.value;
       const otp = verificationState.aadhaar.otpDetails.otp;
-      const result = await verifyAadhaarOtp(aadhaarNumber, otp);
+      const txnId = verificationState.aadhaar.otpDetails.txnId || "";
+      const result = await verifyAadhaarWithOtp(aadhaarNumber, otp, txnId);
 
       if (result.success) {
         setVerificationState(prevState => ({
           ...prevState,
           aadhaar: {
             ...prevState.aadhaar,
-            otpDetails: { otp: otp, status: "success", message: result.message || "Aadhaar verified successfully." },
+            otpDetails: { 
+              ...prevState.aadhaar.otpDetails,
+              status: "success", 
+              message: result.message || "Aadhaar verified successfully." 
+            },
           },
         }));
         toast({
@@ -148,7 +157,11 @@ const KYCVerification = () => {
           ...prevState,
           aadhaar: {
             ...prevState.aadhaar,
-            otpDetails: { otp: otp, status: "error", message: result.message || "Failed to verify OTP." },
+            otpDetails: { 
+              ...prevState.aadhaar.otpDetails,
+              status: "error", 
+              message: result.message || "Failed to verify OTP." 
+            },
           },
         }));
         toast({
@@ -162,7 +175,11 @@ const KYCVerification = () => {
         ...prevState,
         aadhaar: {
           ...prevState.aadhaar,
-          otpDetails: { otp: verificationState.aadhaar.otpDetails.otp, status: "error", message: error.message || "An unexpected error occurred." },
+          otpDetails: { 
+            ...prevState.aadhaar.otpDetails,
+            status: "error", 
+            message: error.message || "An unexpected error occurred." 
+          },
         },
       }));
       toast({
@@ -175,7 +192,6 @@ const KYCVerification = () => {
     }
   };
 
-  // PAN Handlers
   const handleOwnerPanChange = (value: string) => {
     setVerificationState(prevState => ({
       ...prevState,
@@ -200,7 +216,7 @@ const KYCVerification = () => {
     setIsVerifyingOwnerPan(true);
     try {
       const panNumber = verificationState.pan.ownerPan.value;
-      const result = await verifyOwnerPan(panNumber);
+      const result = await verifyPan(panNumber);
 
       if (result.success) {
         setVerificationState(prevState => ({
@@ -250,7 +266,7 @@ const KYCVerification = () => {
     setIsVerifyingBusinessPan(true);
     try {
       const panNumber = verificationState.pan.businessPan.value;
-      const result = await verifyBusinessPan(panNumber);
+      const result = await verifyPan(panNumber);
 
       if (result.success) {
         setVerificationState(prevState => ({
@@ -296,7 +312,6 @@ const KYCVerification = () => {
     }
   };
 
-  // Company Handlers
   const handleCinChange = (value: string) => {
     setVerificationState(prevState => ({
       ...prevState,
@@ -417,7 +432,6 @@ const KYCVerification = () => {
     }
   };
 
-  // GSTIN Handlers
   const handleGstinChange = (value: string) => {
     setVerificationState(prevState => ({
       ...prevState,
@@ -474,7 +488,6 @@ const KYCVerification = () => {
     }
   };
 
-  // Bank Handlers
   const handleAccountNumberChange = (value: string) => {
     setVerificationState(prevState => ({
       ...prevState,
@@ -550,7 +563,6 @@ const KYCVerification = () => {
   };
 
   useEffect(() => {
-    // Check if all verifications are successful
     const allVerificationsSuccessful =
       verificationState.aadhaar.otpDetails.status === "success" &&
       verificationState.pan.ownerPan.status === "success" &&
@@ -570,7 +582,7 @@ const KYCVerification = () => {
   return (
     <Container className="py-12">
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        <VerificationStatus state={verificationState} />
+        <VerificationStatusComponent state={verificationState} />
         <AadhaarVerificationSection
           data={verificationState.aadhaar}
           onAadhaarChange={handleAadhaarChange}

@@ -8,7 +8,7 @@ interface VerificationStatusProps {
   state: VerificationState;
 }
 
-const VerificationStatus = ({ state }: VerificationStatusProps) => {
+const VerificationStatusComponent = ({ state }: VerificationStatusProps) => {
   // Count all the successful verifications
   const getSuccessCount = () => {
     let count = 0;
@@ -90,4 +90,4 @@ const VerificationStatus = ({ state }: VerificationStatusProps) => {
   );
 };
 
-export default VerificationStatus;
+export default VerificationStatusComponent;
