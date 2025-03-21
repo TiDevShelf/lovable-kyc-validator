@@ -127,9 +127,11 @@
     @apply bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border border-gray-200/50 dark:border-gray-800/50 shadow-soft;
   }
 
-  /* Transitions */
+  /* Transitions - Fixed to avoid circular dependency */
   .transition-all {
-    @apply transition-all duration-300 ease-in-out;
+    transition-property: all;
+    transition-duration: 300ms;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
   }
 }
 
