@@ -10,8 +10,6 @@ import {
 } from "@/types/verification";
 
 const API_BASE_URL = "https://api.gridlines.io";
-
-// Helper function to handle API responses
 const handleResponse = async <T>(response: Response): Promise<T> => {
   if (!response.ok) {
     const errorData = await response.json();
