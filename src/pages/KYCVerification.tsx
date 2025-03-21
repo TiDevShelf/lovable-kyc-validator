@@ -1,5 +1,6 @@
+
 import { useState, useEffect } from "react";
-import { toast } from "@/hooks/use-toast"; 
+import { toast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
 import { Container } from "@/components/ui/container";
 import { verifyAadhaarWithOtp, verifyBankAccount, verifyCin, verifyDin, verifyGstin, verifyPan, generateAadhaarOtp } from "@/services/verificationService";
@@ -613,4 +614,61 @@ const KYCVerification = () => {
     }));
   }, [verificationState]);
 
-  if
+  if (verificationState.isFullyVerified) {
+    return (
+      <Container className="py-12">
+        <VerificationSuccessMessage />
+      </Container>
+    );
+  }
+
+  return (
+    <Container className="py-12">
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <VerificationStatusComponent state={verificationState} />
+        <AadhaarVerificationSection
+          data={verificationState.aadhaar}
+          onAadhaarChange={handleAadhaarChange}
+          onOtpChange={handleOtpChange}
+          onGenerateOtp={handleGenerateOtp}
+          onVerifyOtp={handleVerifyOtp}
+          isGeneratingOtp={isGeneratingAadhaarOtp}
+          isVerifyingOtp={isVerifyingAadhaarOtp}
+        />
+        <PanVerificationSection
+          data={verificationState.pan}
+          onOwnerPanChange={handleOwnerPanChange}
+          onBusinessPanChange={handleBusinessPanChange}
+          onVerifyOwnerPan={handleVerifyOwnerPan}
+          onVerifyBusinessPan={handleVerifyBusinessPan}
+          isVerifyingOwnerPan={isVerifyingOwnerPan}
+          isVerifyingBusinessPan={isVerifyingBusinessPan}
+        />
+        <CompanyVerificationSection
+          data={verificationState.company}
+          onCinChange={handleCinChange}
+          onDinChange={handleDinChange}
+          onVerifyCin={handleVerifyCin}
+          onVerifyDin={handleVerifyDin}
+          isVerifyingCin={isVerifyingCin}
+          isVerifyingDin={isVerifyingDin}
+        />
+        <GstinVerificationSection
+          data={verificationState.gstin}
+          onGstinChange={handleGstinChange}
+          onVerifyGstin={handleVerifyGstin}
+          isVerifyingGstin={isVerifyingGstin}
+        />
+        <BankVerificationSection
+          data={verificationState.bank}
+          onAccountNumberChange={handleAccountNumberChange}
+          onIfscChange={handleIfscChange}
+          onVerifyBankAccount={handleVerifyBankAccount}
+          isVerifyingBank={isVerifyingBank}
+        />
+      </div>
+    </Container>
+  );
+};
+
+export default KYCVerification;
