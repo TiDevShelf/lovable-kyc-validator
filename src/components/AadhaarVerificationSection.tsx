@@ -1,10 +1,10 @@
-
-import { useState } from "react";
+import { Dispatch, SetStateAction, useState } from "react";
 import VerificationField from "@/components/VerificationField";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { AadhaarVerification } from "@/types/verification";
 import { User, ShieldCheck, Fingerprint, KeyRound, Loader2 } from "lucide-react";
 
@@ -12,11 +12,14 @@ interface AadhaarVerificationSectionProps {
   data: AadhaarVerification;
   onAadhaarChange: (value: string) => void;
   onOtpChange: (value: string) => void;
-  onGenerateOtp: () => void;
-  onVerifyOtp: () => void;
+  onGenerateOtp: (consent: boolean) => Promise<void>;
+  onVerifyOtp: () => Promise<void>;
   isGeneratingOtp: boolean;
   isVerifyingOtp: boolean;
+  consent: boolean; // Add this
+  setConsent: Dispatch<SetStateAction<boolean>>; // Add this
 }
+
 
 const AadhaarVerificationSection = ({
   data,
@@ -25,8 +28,16 @@ const AadhaarVerificationSection = ({
   onGenerateOtp,
   onVerifyOtp,
   isGeneratingOtp,
-  isVerifyingOtp
+  isVerifyingOtp,
 }: AadhaarVerificationSectionProps) => {
+  const [consent, setConsent] = useState(false);
+
+  const handleConsentChange = (newConsent: boolean) => {
+    // const newConsent = "Y"
+    console.log("Consent state updated:", newConsent);
+    setConsent(newConsent);
+  };
+  
   return (
     <Card className="verification-section animate-fade-in">
       <CardHeader className="pb-2">
@@ -50,11 +61,22 @@ const AadhaarVerificationSection = ({
           placeholder="Enter 12-digit Aadhaar number"
           maxLength={12}
           onChange={onAadhaarChange}
-          onVerify={onGenerateOtp}
+          onVerify={() => onGenerateOtp(consent)}
           buttonLabel="Generate OTP"
           isLoading={isGeneratingOtp}
           disabled={data.isOtpRequested && data.otpDetails.status === "success"}
         />
+
+        <div className="flex items-center gap-2">
+          <Checkbox
+            id="consent"
+            checked={consent}
+            onCheckedChange={handleConsentChange}
+          />
+          <Label htmlFor="consent" className="text-sm">
+            I provide my consent for Aadhaar verification
+          </Label>
+        </div>
 
         {data.isOtpRequested && (
           <div className="form-group animate-slide-up">
@@ -114,12 +136,6 @@ const AadhaarVerificationSection = ({
               </p>
             )}
           </div>
-        )}
-        
-        {!data.isOtpRequested && (
-          <p className="text-sm text-muted-foreground">
-            Enter your Aadhaar number and generate OTP for verification.
-          </p>
         )}
       </CardContent>
     </Card>

@@ -43,7 +43,7 @@ const BankVerificationSection = ({
           onChange={onAccountNumberChange}
           onVerify={onVerifyBankAccount}
           isLoading={isVerifyingBank}
-          disabled={data.ifsc.value === ""}
+          // disabled={data.ifsc.value === ""}
         />
         
         <VerificationField
@@ -57,7 +57,7 @@ const BankVerificationSection = ({
           onChange={onIfscChange}
           onVerify={onVerifyBankAccount}
           isLoading={isVerifyingBank}
-          disabled={data.accountNumber.value === ""}
+          // disabled={data.accountNumber.value === ""}
         />
       </CardContent>
     </Card>

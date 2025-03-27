@@ -50,7 +50,7 @@ const PanVerificationSection = ({
           isLoading={isVerifyingOwnerPan}
         />
         
-        <VerificationField
+        {/* <VerificationField
           id="business-pan"
           label="Business PAN"
           value={data.businessPan.value}
@@ -61,7 +61,7 @@ const PanVerificationSection = ({
           onChange={onBusinessPanChange}
           onVerify={onVerifyBusinessPan}
           isLoading={isVerifyingBusinessPan}
-        />
+        /> */}
       </CardContent>
     </Card>
   );

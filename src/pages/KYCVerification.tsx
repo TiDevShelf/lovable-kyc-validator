@@ -19,7 +19,10 @@ const KYCVerification = () => {
     aadhaar: {
       aadhaar: { value: "", status: "idle", message: "" },
       isOtpRequested: false,
-      otpDetails: { value: "", otp: "", status: "idle", message: "" },
+      otpDetails: {
+        value: "", otp: "", status: "idle", message: "",
+        transaction_id: ""
+      },
     },
     pan: {
       ownerPan: { value: "", status: "idle", message: "" },
@@ -38,7 +41,7 @@ const KYCVerification = () => {
     },
     isFullyVerified: false,
   });
-
+  const [consent, setConsent] = useState("");
   const [isGeneratingAadhaarOtp, setIsGeneratingAadhaarOtp] = useState(false);
   const [isVerifyingAadhaarOtp, setIsVerifyingAadhaarOtp] = useState(false);
   const [isVerifyingOwnerPan, setIsVerifyingOwnerPan] = useState(false);
@@ -53,7 +56,10 @@ const KYCVerification = () => {
       aadhaar: {
         aadhaar: { value: "", status: "idle", message: "" },
         isOtpRequested: false,
-        otpDetails: { value: "", otp: "", status: "idle", message: "" },
+        otpDetails: {
+          value: "", otp: "", status: "idle", message: "",
+          transaction_id: ""
+        },
       },
       pan: {
         ownerPan: { value: "", status: "idle", message: "" },
@@ -73,18 +79,23 @@ const KYCVerification = () => {
       isFullyVerified: false,
     });
   };
-
-  const handleAadhaarChange = (value: string) => {
-    setVerificationState(prevState => ({
-      ...prevState,
-      aadhaar: {
-        ...prevState.aadhaar,
-        aadhaar: { value: value, status: "idle", message: "" },
-        isOtpRequested: false,
-        otpDetails: { value: "", otp: "", status: "idle", message: "" },
+const handleAadhaarChange = (value: string) => {
+  setVerificationState(prevState => ({
+    ...prevState,
+    aadhaar: {
+      ...prevState.aadhaar,
+      aadhaar: { value: value, status: "idle", message: "" },
+      isOtpRequested: false,
+      otpDetails: { 
+        value: "", 
+        otp: "", 
+        status: "idle", 
+        message: "",
+        transaction_id: "" 
       },
-    }));
-  };
+    },
+  }));
+};
 
   const handleOtpChange = (value: string) => {
     setVerificationState(prevState => ({
@@ -99,9 +110,9 @@ const KYCVerification = () => {
   const handleGenerateOtp = async () => {
     setIsGeneratingAadhaarOtp(true);
     try {
-      const aadhaarNumber = verificationState.aadhaar.aadhaar.value;
-      const result = await generateAadhaarOtp(aadhaarNumber);
-
+      const aadhaar_number = verificationState.aadhaar.aadhaar.value;
+      const consent = "Y"; 
+      const result = await generateAadhaarOtp(aadhaar_number, consent);
       if (result.success) {
         setVerificationState(prevState => ({
           ...prevState,
@@ -109,10 +120,10 @@ const KYCVerification = () => {
             ...prevState.aadhaar,
             isOtpRequested: true,
             aadhaar: { ...prevState.aadhaar.aadhaar, status: "success" },
-            otpDetails: { 
+            otpDetails: {
               ...prevState.aadhaar.otpDetails,
-              value: result.data?.txnId || "",
-              txnId: result.data?.txnId
+              value: result.data?.transaction_id || "", 
+              transaction_id: result.data?.transaction_id  
             }
           },
         }));
@@ -121,31 +132,14 @@ const KYCVerification = () => {
           description: result.message || "OTP has been sent to your Aadhaar-linked mobile number.",
         });
       } else {
-        setVerificationState(prevState => ({
-          ...prevState,
-          aadhaar: {
-            ...prevState.aadhaar,
-            aadhaar: { ...prevState.aadhaar.aadhaar, status: "error", message: result.message || "Failed to generate OTP." },
-            isOtpRequested: false,
-            otpDetails: { value: "", otp: "", status: "idle", message: "" },
-          },
-        }));
         toast({
           variant: "destructive",
           title: "OTP Generation Failed",
-          description: result.message || "Failed to generate OTP. Please try again.",
+          description: result.error || "Failed to generate OTP. Please try again.",
         });
       }
-    } catch (error: any) {
-      setVerificationState(prevState => ({
-        ...prevState,
-        aadhaar: {
-          ...prevState.aadhaar,
-          aadhaar: { ...prevState.aadhaar.aadhaar, status: "error", message: error.message || "An unexpected error occurred." },
-          isOtpRequested: false,
-          otpDetails: { value: "", otp: "", status: "idle", message: "" },
-        },
-      }));
+    } catch (error) {
+      console.error("Error in handleGenerateOtp:", error);
       toast({
         variant: "destructive",
         title: "OTP Generation Error",
@@ -155,24 +149,25 @@ const KYCVerification = () => {
       setIsGeneratingAadhaarOtp(false);
     }
   };
-
+  
   const handleVerifyOtp = async () => {
     setIsVerifyingAadhaarOtp(true);
     try {
-      const aadhaarNumber = verificationState.aadhaar.aadhaar.value;
+      const aadhaar_number = verificationState.aadhaar.aadhaar.value;
       const otp = verificationState.aadhaar.otpDetails.otp;
-      const txnId = verificationState.aadhaar.otpDetails.txnId || "";
-      const result = await verifyAadhaarWithOtp(aadhaarNumber, otp, txnId);
-
+      const transaction_id = verificationState.aadhaar.otpDetails.transaction_id || "";  // ✅ Use transaction_id instead of txnId
+  
+      const result = await verifyAadhaarWithOtp(aadhaar_number, otp, transaction_id);  // ✅ Pass transaction_id correctly
+  
       if (result.success) {
         setVerificationState(prevState => ({
           ...prevState,
           aadhaar: {
             ...prevState.aadhaar,
-            otpDetails: { 
+            otpDetails: {
               ...prevState.aadhaar.otpDetails,
-              status: "success", 
-              message: result.message || "Aadhaar verified successfully." 
+              status: "success",
+              message: result.message || "Aadhaar verified successfully."
             },
           },
         }));
@@ -185,10 +180,10 @@ const KYCVerification = () => {
           ...prevState,
           aadhaar: {
             ...prevState.aadhaar,
-            otpDetails: { 
+            otpDetails: {
               ...prevState.aadhaar.otpDetails,
-              status: "error", 
-              message: result.message || "Failed to verify OTP." 
+              status: "error",
+              message: result.message || "Failed to verify OTP."
             },
           },
         }));
@@ -203,10 +198,10 @@ const KYCVerification = () => {
         ...prevState,
         aadhaar: {
           ...prevState.aadhaar,
-          otpDetails: { 
+          otpDetails: {
             ...prevState.aadhaar.otpDetails,
-            status: "error", 
-            message: error.message || "An unexpected error occurred." 
+            status: "error",
+            message: error.message || "An unexpected error occurred."
           },
         },
       }));
@@ -219,6 +214,7 @@ const KYCVerification = () => {
       setIsVerifyingAadhaarOtp(false);
     }
   };
+  
 
   const handleOwnerPanChange = (value: string) => {
     setVerificationState(prevState => ({
@@ -627,14 +623,17 @@ const KYCVerification = () => {
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         <VerificationStatusComponent state={verificationState} />
         <AadhaarVerificationSection
-          data={verificationState.aadhaar}
-          onAadhaarChange={handleAadhaarChange}
-          onOtpChange={handleOtpChange}
-          onGenerateOtp={handleGenerateOtp}
-          onVerifyOtp={handleVerifyOtp}
-          isGeneratingOtp={isGeneratingAadhaarOtp}
-          isVerifyingOtp={isVerifyingAadhaarOtp}
-        />
+  data={verificationState.aadhaar}
+  onAadhaarChange={handleAadhaarChange}
+  onOtpChange={handleOtpChange}
+  onGenerateOtp={handleGenerateOtp}
+  onVerifyOtp={handleVerifyOtp}
+  isGeneratingOtp={isGeneratingAadhaarOtp}
+  isVerifyingOtp={isVerifyingAadhaarOtp}
+  consent={consent === "Y"} 
+  setConsent={(checked) => setConsent(checked ? "Y" : "")} 
+/>
+
         <PanVerificationSection
           data={verificationState.pan}
           onOwnerPanChange={handleOwnerPanChange}

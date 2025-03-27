@@ -8,6 +8,7 @@ export interface VerificationField {
 }
 
 export interface OtpVerification extends VerificationField {
+  transaction_id: string;
   otp: string;
   txnId?: string;
 }
@@ -56,6 +57,7 @@ export interface ApiResponse {
 
 export interface AadhaarOtpResponse extends ApiResponse {
   data?: {
+    transaction_id: any;
     txnId: string;
   };
 }
@@ -103,7 +105,7 @@ export interface GstinVerifyResponse extends ApiResponse {
 
 export interface BankVerifyResponse extends ApiResponse {
   data?: {
-    accountExists: boolean;
+    // accountExists: boolean;
     accountHolderName?: string;
     bankName?: string;
   };
